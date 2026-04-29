@@ -25,9 +25,6 @@ class AccessController extends BaseController
 
         if ($userWxapp->user_id) {
             $user = User::where('id', $userWxapp->user_id)->find();
-            if (!$user->status) {
-                $this->error(403, '该账号已被禁用', 'NOT_AUTH');
-            }
             $accessToken = Auth::setAccessToken($user->id, [
                 'level' => 'bound',
                 'user_info' => $user->toArray(),

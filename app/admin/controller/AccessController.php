@@ -25,6 +25,10 @@ class AccessController extends BaseController
             $this->error(401, '无权限登录或已禁用', 'LOGIN_FAIL');
         }
 
+        if (!$manager->status) {
+            $this->error(403, '该账号已被禁用', 'NOT_AUTH');
+        }
+
         $accessToken = Auth::setAccessToken($manager->id, $manager);
         $this->app->event->trigger('ManagerLoginAfter', $manager);
 
