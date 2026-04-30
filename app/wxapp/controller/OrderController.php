@@ -9,7 +9,7 @@ class OrderController extends BaseController
 {
     public function pagination()
     {
-        $orders = Order::paginate();
+        $orders = Order::with(['user', 'target_user'])->paginate();
         $this->success(200, $orders);
     }
 
