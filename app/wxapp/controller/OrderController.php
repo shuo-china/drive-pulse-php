@@ -7,6 +7,12 @@ use app\wxapp\model\Order;
 
 class OrderController extends BaseController
 {
+    public function pagination()
+    {
+        $orders = Order::paginate();
+        $this->success(200, $orders);
+    }
+
     public function create()
     {
         $post = $this->request->post();
