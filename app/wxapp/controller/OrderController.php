@@ -20,12 +20,6 @@ class OrderController extends BaseController
         if (!empty($param['target_user_id'])) {
             $map[] = ['target_user_id', '=', $param['target_user_id']];
         }
-        if (!empty($param['nickname'])) {
-            $map[] = ['user.nickname', 'like', '%' . $param['nickname'] . '%'];
-        }
-        if (!empty($param['uid'])) {
-            $map[] = ['user.uid', '=', $param['uid']];
-        }
         if (!empty($param['date'])) {
             $startTime = strtotime($param['date'] . ' 00:00:00');
             if ($startTime !== false) {
@@ -33,8 +27,31 @@ class OrderController extends BaseController
                 $map[] = ['create_time', 'between', [$startTime, $endTime]];
             }
         }
- 
-        $orders = Order::with(['user', 'target_user'])->where($map)->paginate();
+
+        $query = Order::with(['user', 'targetUser'])->where($map);
+
+        if (!empty($param['user_nickname'])) {
+            $query->whereHas('user', function ($q) use ($param) {
+                $q->whereLike('nickname', '%' . $param['user_nickname'] . '%');
+            });
+        }
+        if (!empty($param['user_uid'])) {
+            $query->whereHas('user', function ($q) use ($param) {
+                $q->where('uid', '=', $param['user_uid']);
+            });
+        }
+        if (!empty($param['target_user_nickname'])) {
+            $query->whereHas('targetUser', function ($q) use ($param) {
+                $q->whereLike('nickname', '%' . $param['target_user_nickname'] . '%');
+            });
+        }
+        if (!empty($param['target_user_uid'])) {
+            $query->whereHas('targetUser', function ($q) use ($param) {
+                $q->where('uid', '=', $param['target_user_uid']);
+            });
+        }
+
+        $orders = $query->paginate();
         $this->success(200, $orders);
     }
 
