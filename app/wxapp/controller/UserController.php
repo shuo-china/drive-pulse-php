@@ -135,7 +135,7 @@ class UserController extends BaseController
                 $channels[] = [
                     'id' => $channel['id'],
                     'title' => $channel['title'],
-                    'audit_status' => $userChannelMap[$item->id][$channel['id']],
+                    'audit_status' => $userChannelMap[$item->id][$channel['id']] ?? 0,
                     'count' => ($releaseCountMap[$item->id][$channel['id']] ?? 0) - ($takeCountMap[$item->id][$channel['id']] ?? 0),
                 ];
             }
