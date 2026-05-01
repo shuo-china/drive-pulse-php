@@ -92,7 +92,7 @@ class UserController extends BaseController
             $map[] = ['uid', '=', $param['uid']];
         }
 
-        $users = User::where($map)->paginate();
+        $users = User::where($map)->order('create_time', 'desc')->paginate();
         $pageUserIds = array_column($users->items(), 'id');
 
         $releaseCountMap = [];
@@ -114,9 +114,11 @@ class UserController extends BaseController
                 ->column('take_count_sum', 'target_user_id');
         }
 
-        $users->each(function ($item) use ($releaseCountMap, $takeCountMap) {
+        $todayStartTimestamp = strtotime(date('Y-m-d'));
+        $users->each(function ($item) use ($releaseCountMap, $takeCountMap, $todayStartTimestamp) {
             $item->release_count_sum = (int) ($releaseCountMap[$item->id] ?? 0);
             $item->take_count_sum = (int) ($takeCountMap[$item->id] ?? 0);
+            $item->register_days = max(1, (int) (($todayStartTimestamp - strtotime(date('Y-m-d', $item->create_time))) / 86400) + 1);
             return $item;
         });
 
