@@ -45,7 +45,7 @@ class OrderController extends BaseController
             $map[] = empty($targetUserId) ? ['target_user_id', '=', 0] : ['target_user_id', '=', $targetUserId];
         }
 
-        $orders = Order::with(['user', 'targetUser'])->where($map)->paginate();
+        $orders = Order::with(['user', 'targetUser'])->where($map)->order('create_time', 'desc')->paginate();
         $this->success(200, $orders);
     }
 
