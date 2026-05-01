@@ -118,7 +118,7 @@ class UserController extends BaseController
         $users->each(function ($item) use ($releaseCountMap, $takeCountMap, $todayStartTimestamp) {
             $item->release_count_sum = (int) ($releaseCountMap[$item->id] ?? 0);
             $item->take_count_sum = (int) ($takeCountMap[$item->id] ?? 0);
-            $item->register_days = max(1, (int) (($todayStartTimestamp - strtotime(date('Y-m-d', $item->getDate('create_time')))) / 86400) + 1);
+            $item->register_days = max(1, (int) (($todayStartTimestamp - strtotime(date('Y-m-d', $item->getData('create_time')))) / 86400) + 1);
             return $item;
         });
 
