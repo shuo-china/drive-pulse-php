@@ -52,7 +52,7 @@ class ChannelController extends BaseController
     public function delete()
     {
         $id = $this->request->param('id');
-        $channel = Channel::destroy($id);
+        Channel::destroy($id);
         $this->success(204);
     }
     public function applyPagination()
