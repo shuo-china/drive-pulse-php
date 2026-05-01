@@ -7,6 +7,7 @@ use app\wxapp\model\File as FileModel;
 use app\wxapp\model\UserWechatMini;
 use app\wxapp\model\UserChannel;
 use app\wxapp\model\Order;
+use app\wxapp\model\Channel;
 
 class UserController extends BaseController
 {
@@ -77,13 +78,9 @@ class UserController extends BaseController
         $this->success(200, $user);
     }
 
-    public function statistics($channel_id)
+    public function statistics()
     {
-        $userIds = UserChannel::where('channel_id', $channel_id)->where('audit_status', 2)->column('user_id');
-        $map = [
-            ['id', 'in', $userIds],
-        ];
-
+        $map = [];
         $param = $this->request->param();
         if (!empty($param['nickname'])) {
             $map[] = ['nickname', 'like', '%' . $param['nickname'] . '%'];
@@ -97,27 +94,52 @@ class UserController extends BaseController
 
         $releaseCountMap = [];
         $takeCountMap = [];
+        $userChannelMap = [];
 
         if (!empty($pageUserIds)) {
-            $releaseCountMap = Order::where('channel_id', $channel_id)
-                ->where('user_id', 'in', $pageUserIds)
-                ->field('user_id, SUM(count) as release_count_sum')
-                ->group('user_id')
+            $releaseCountRows = Order::where('user_id', 'in', $pageUserIds)
+                ->field('user_id, channel_id, SUM(count) as release_count_sum')
+                ->group('user_id, channel_id')
                 ->select()
-                ->column('release_count_sum', 'user_id');
+                ->toArray();
 
-            $takeCountMap = Order::where('channel_id', $channel_id)
-                ->where('target_user_id', 'in', $pageUserIds)
-                ->field('target_user_id, SUM(count) as take_count_sum')
-                ->group('target_user_id')
+            foreach ($releaseCountRows as $row) {
+                $releaseCountMap[$row['user_id']][$row['channel_id']] = (int) $row['release_count_sum'];
+            }
+
+            $takeCountRows = Order::where('target_user_id', 'in', $pageUserIds)
+                ->field('target_user_id, channel_id, SUM(count) as take_count_sum')
+                ->group('target_user_id, channel_id')
                 ->select()
-                ->column('take_count_sum', 'target_user_id');
+                ->toArray();
+
+            foreach ($takeCountRows as $row) {
+                $takeCountMap[$row['target_user_id']][$row['channel_id']] = (int) $row['take_count_sum'];
+            }
+
+            $userChannelRows = UserChannel::where('user_id', 'in', $pageUserIds)
+                ->field('user_id, channel_id, audit_status')
+                ->select()
+                ->toArray();
+
+            foreach ($userChannelRows as $row) {
+                $userChannelMap[$row['user_id']][$row['channel_id']] = (int) $row['audit_status'];
+            }
         }
-
+        
+        $channelList = Channel::where('status', 1)->select()->toArray();
         $todayStartTimestamp = strtotime(date('Y-m-d'));
-        $users->each(function ($item) use ($releaseCountMap, $takeCountMap, $todayStartTimestamp) {
-            $item->release_count_sum = (int) ($releaseCountMap[$item->id] ?? 0);
-            $item->take_count_sum = (int) ($takeCountMap[$item->id] ?? 0);
+        $users->each(function ($item) use ($releaseCountMap, $takeCountMap, $userChannelMap, $todayStartTimestamp, $channelList) {
+            $channels = [];
+            foreach ($channelList as $channel) {
+                $channels[] = [
+                    'id' => $channel['id'],
+                    'title' => $channel['title'],
+                    'audit_status' => $userChannelMap[$item->id][$channel['id']],
+                    'count' => ($releaseCountMap[$item->id][$channel['id']] ?? 0) - ($takeCountMap[$item->id][$channel['id']] ?? 0),
+                ];
+            }
+            $item->channels = $channels;
             $item->register_days = max(1, (int) (($todayStartTimestamp - strtotime(date('Y-m-d', $item->getData('create_time')))) / 86400) + 1);
             return $item;
         });
