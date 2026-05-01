@@ -80,11 +80,7 @@ class UserController extends BaseController
 
     public function statistics()
     {
-        $userIds = UserChannel::where('audit_status', 2)->column('user_id');
-        $map = [
-            ['id', 'in', $userIds],
-        ];
-
+        $map = [];
         $param = $this->request->param();
         if (!empty($param['nickname'])) {
             $map[] = ['nickname', 'like', '%' . $param['nickname'] . '%'];
@@ -98,6 +94,7 @@ class UserController extends BaseController
 
         $releaseCountMap = [];
         $takeCountMap = [];
+        $userChannelMap = [];
 
         if (!empty($pageUserIds)) {
             $releaseCountRows = Order::where('user_id', 'in', $pageUserIds)
@@ -119,15 +116,26 @@ class UserController extends BaseController
             foreach ($takeCountRows as $row) {
                 $takeCountMap[$row['target_user_id']][$row['channel_id']] = (int) $row['take_count_sum'];
             }
-        }
 
+            $userChannelRows = UserChannel::where('user_id', 'in', $pageUserIds)
+                ->field('user_id, channel_id, audit_status')
+                ->select()
+                ->toArray();
+
+            foreach ($userChannelRows as $row) {
+                $userChannelMap[$row['user_id']][$row['channel_id']] = (int) $row['audit_status'];
+            }
+        }
+        
         $channelList = Channel::where('status', 1)->select()->toArray();
         $todayStartTimestamp = strtotime(date('Y-m-d'));
-        $users->each(function ($item) use ($releaseCountMap, $takeCountMap, $todayStartTimestamp, $channelList) {
+        $users->each(function ($item) use ($releaseCountMap, $takeCountMap, $userChannelMap, $todayStartTimestamp, $channelList) {
             $channels = [];
             foreach ($channelList as $channel) {
                 $channels[] = [
+                    'id' => $channel['id'],
                     'title' => $channel['title'],
+                    'audit_status' => $userChannelMap[$item->id][$channel['id']],
                     'count' => ($releaseCountMap[$item->id][$channel['id']] ?? 0) - ($takeCountMap[$item->id][$channel['id']] ?? 0),
                 ];
             }
