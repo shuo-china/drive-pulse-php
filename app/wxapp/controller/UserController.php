@@ -76,4 +76,50 @@ class UserController extends BaseController
 
         $this->success(200, $user);
     }
+
+    public function statistics($channel_id)
+    {
+        $userIds = UserChannel::where('channel_id', $channel_id)->where('audit_status', 2)->column('user_id');
+        $map = [
+            ['id', 'in', $userIds],
+        ];
+
+        $param = $this->request->param();
+        if (!empty($param['nickname'])) {
+            $map[] = ['nickname', 'like', '%' . $param['nickname'] . '%'];
+        }
+        if (!empty($param['uid'])) {
+            $map[] = ['uid', '=', $param['uid']];
+        }
+
+        $users = User::where($map)->paginate();
+        $pageUserIds = array_column($users->items(), 'id');
+
+        $releaseCountMap = [];
+        $takeCountMap = [];
+
+        if (!empty($pageUserIds)) {
+            $releaseCountMap = Order::where('channel_id', $channel_id)
+                ->where('user_id', 'in', $pageUserIds)
+                ->field('user_id, SUM(count) as release_count_sum')
+                ->group('user_id')
+                ->select()
+                ->column('release_count_sum', 'user_id');
+
+            $takeCountMap = Order::where('channel_id', $channel_id)
+                ->where('target_user_id', 'in', $pageUserIds)
+                ->field('target_user_id, SUM(count) as take_count_sum')
+                ->group('target_user_id')
+                ->select()
+                ->column('take_count_sum', 'target_user_id');
+        }
+
+        $users->each(function ($item) use ($releaseCountMap, $takeCountMap) {
+            $item->release_count_sum = (int) ($releaseCountMap[$item->id] ?? 0);
+            $item->take_count_sum = (int) ($takeCountMap[$item->id] ?? 0);
+            return $item;
+        });
+
+        $this->success(200, $users);
+    }
 }
