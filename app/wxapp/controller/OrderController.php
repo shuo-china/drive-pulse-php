@@ -28,30 +28,24 @@ class OrderController extends BaseController
             }
         }
 
-        $query = Order::with(['user', 'targetUser'])->where($map);
-
         if (!empty($param['user_nickname'])) {
-            $query->whereHas('user', function ($q) use ($param) {
-                $q->whereLike('nickname', '%' . $param['user_nickname'] . '%');
-            });
+            $userIds = User::whereLike('nickname', '%' . $param['user_nickname'] . '%')->column('id');
+            $map[] = empty($userIds) ? ['user_id', '=', 0] : ['user_id', 'in', $userIds];
         }
         if (!empty($param['user_uid'])) {
-            $query->whereHas('user', function ($q) use ($param) {
-                $q->where('uid', '=', $param['user_uid']);
-            });
+            $userId = User::where('uid', '=', $param['user_uid'])->value('id');
+            $map[] = empty($userId) ? ['user_id', '=', 0] : ['user_id', '=', $userId];
         }
         if (!empty($param['target_user_nickname'])) {
-            $query->whereHas('targetUser', function ($q) use ($param) {
-                $q->whereLike('nickname', '%' . $param['target_user_nickname'] . '%');
-            });
+            $targetUserIds = User::whereLike('nickname', '%' . $param['target_user_nickname'] . '%')->column('id');
+            $map[] = empty($targetUserIds) ? ['target_user_id', '=', 0] : ['target_user_id', 'in', $targetUserIds];
         }
         if (!empty($param['target_user_uid'])) {
-            $query->whereHas('targetUser', function ($q) use ($param) {
-                $q->where('uid', '=', $param['target_user_uid']);
-            });
+            $targetUserId = User::where('uid', '=', $param['target_user_uid'])->value('id');
+            $map[] = empty($targetUserId) ? ['target_user_id', '=', 0] : ['target_user_id', '=', $targetUserId];
         }
 
-        $orders = $query->paginate();
+        $orders = Order::with(['user', 'targetUser'])->where($map)->paginate();
         $this->success(200, $orders);
     }
 
