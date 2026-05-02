@@ -17,7 +17,7 @@ class NoticeController extends BaseController
         $post = $this->request->post();
         $notices = Notice::order('id', 'desc')->select()->toArray();
 
-        $this->success(200, Notice::order('id', 'desc')->find());
+        $this->success(200, Notice::where('id', '<>', 0)->find());
 
         if (empty($notices)) {
             Notice::create($post);
