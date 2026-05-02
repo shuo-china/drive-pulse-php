@@ -7,16 +7,30 @@ use app\wxapp\model\UserChannel;
 
 class ChannelController extends BaseController
 {
+    protected $middleware = [
+        'wxapp_api_auth:guest' => [
+            'only' => [
+                'list'
+            ],
+        ],
+        'wxapp_api_auth:bound' => [
+            'except' => [
+                'list'
+            ],
+        ],
+    ];
+
     public function list()
     {
         $channels = Channel::where('status', 1)->field('id,title')->select();
-        $userChannels = UserChannel::where('user_id', $this->request->userId)->column('audit_status,refuse_reason', 'channel_id');
 
-        foreach ($channels as $channel) {
-            $channel->audit_status = $userChannels[$channel->id]['audit_status'] ?? 0;
-            $channel->refuse_reason = $userChannels[$channel->id]['refuse_reason'] ?? null;
+        if ($this->request->userId) {
+            $userChannels = UserChannel::where('user_id', $this->request->userId)->column('audit_status,refuse_reason', 'channel_id');
+            foreach ($channels as $channel) {
+                $channel->audit_status = $userChannels[$channel->id]['audit_status'] ?? 0;
+                $channel->refuse_reason = $userChannels[$channel->id]['refuse_reason'] ?? null;
+            }
         }
-
         return $this->success(200, $channels);
     }
 
