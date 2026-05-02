@@ -15,7 +15,7 @@ class NoticeController extends BaseController
     public function update()
     {
         $post = $this->request->post();
-        $notice = Notice::find();
+        $notice = Notice::find(100031);
         $this->success(200, $notice);
         if (!$notice) {
             Notice::create($post);
