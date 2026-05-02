@@ -4,6 +4,7 @@ namespace app\wxapp\controller;
 
 use app\wxapp\model\User;
 use app\wxapp\model\Order;
+use app\wxapp\model\Channel;
 
 class OrderController extends BaseController
 {
@@ -52,27 +53,15 @@ class OrderController extends BaseController
     public function create()
     {
         $post = $this->request->post();
-        $user = User::where('id', $this->request->userId)->find();
-
-        if ($user->balance_limit) {
-            $userReleaseCount = Order::where('channel_id', $post['channel_id'])->where('user_id', $this->request->userId)->sum('count');
-            $userTakeCount = Order::where('channel_id', $post['channel_id'])->where('target_user_id', $this->request->userId)->sum('count');
-            $userBalanceCount = $userReleaseCount - $userTakeCount;
-            if ($userBalanceCount + $post['count'] > config('sys.drive_pulse.balance_count_max')) {
-                $errorMessage = "报单后您的结余为【" . ($userBalanceCount + $post['count']) . "】，高于限制【" . config('sys.drive_pulse.balance_count_max') . "】，无法报单";
-                $this->error(400, $errorMessage, 'BALANCE_LIMIT_USER');
-            }
-        }
+        $balanceLimitCount = Channel::where('id', $post['channel_id'])->value('balance_limit_count');
 
         $targetUser = User::where('uid', $post['uid'])->find();
-        if ($targetUser->balance_limit) {
-            $targetUserReleaseCount = Order::where('channel_id', $post['channel_id'])->where('user_id', $targetUser['id'])->sum('count');
-            $targetUserTakeCount = Order::where('channel_id', $post['channel_id'])->where('target_user_id', $targetUser['id'])->sum('count');
-            $targetUserBalanceCount = $targetUserReleaseCount - $targetUserTakeCount;
-            if ($targetUserBalanceCount - $post['count'] < config('sys.drive_pulse.balance_count_min')) {
-                $errorMessage = "报单后对方结余为【" . ($targetUserBalanceCount - $post['count']) . "】，低于限制【" . config('sys.drive_pulse.balance_count_min') . "】，无法报单";
-                $this->error(400, $errorMessage, 'BALANCE_LIMIT_TARGET_USER');
-            }
+        $targetUserReleaseCount = Order::where('channel_id', $post['channel_id'])->where('user_id', $targetUser['id'])->sum('count');
+        $targetUserTakeCount = Order::where('channel_id', $post['channel_id'])->where('target_user_id', $targetUser['id'])->sum('count');
+        $targetUserBalanceCount = $targetUserReleaseCount - $targetUserTakeCount;
+        if ($targetUserBalanceCount - $post['count'] < $balanceLimitCount) {
+            $errorMessage = "报单后对方结余为【" . ($targetUserBalanceCount - $post['count']) . "】，低于限制【" . $balanceLimitCount . "】，无法报单";
+            $this->error(400, $errorMessage, 'BALANCE_LIMIT');
         }
 
         Order::create([
