@@ -59,7 +59,7 @@ class OrderController extends BaseController
             $userBalanceCount = $userReleaseCount - $userTakeCount;
             if ($userBalanceCount + $post['count'] > config('drive_pulse.balance_count_max')) {
                 $errorMessage = "您的当前结余为{$userBalanceCount}，本次报单后您的结余为" . ($userBalanceCount + $post['count']) . "，高于限制" . config('drive_pulse.balance_count_max');
-                $this->error(400, $errorMessage, 'BALANCE_LIMIT');
+                $this->error(500, $errorMessage, 'BALANCE_LIMIT');
             }
         }
         
