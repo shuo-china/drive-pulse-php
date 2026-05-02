@@ -14,12 +14,14 @@ class UserController extends BaseController
     protected $middleware = [
         'wxapp_api_auth:guest' => [
             'only' => [
-                'improve'
+                'improve',
+                'statistics'
             ],
         ],
         'wxapp_api_auth:bound' => [
             'except' => [
-                'improve'
+                'improve',
+                'statistics'
             ],
         ],
     ];
