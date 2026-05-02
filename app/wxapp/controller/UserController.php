@@ -93,7 +93,13 @@ class UserController extends BaseController
             $map[] = ['uid', '=', $param['uid']];
         }
 
-        $users = User::where($map)->order('create_time', 'desc')->paginate();
+        $userQuery = User::where($map);
+        if (!empty($this->request->userId)) {
+            $userQuery = $userQuery->orderRaw("CASE WHEN id = {$this->request->userId} THEN 0 ELSE 1 END ASC, create_time DESC");
+        } else {
+            $userQuery = $userQuery->order('create_time', 'desc');
+        }
+        $users = $userQuery->paginate();
         $pageUserIds = array_column($users->items(), 'id');
 
         $releaseCountMap = [];
