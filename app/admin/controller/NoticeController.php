@@ -16,6 +16,7 @@ class NoticeController extends BaseController
     {
         $post = $this->request->post();
         $notice = Notice::find();
+        $this->succeess(200, $notice);
         if (!$notice) {
             Notice::create($post);
         } else {
