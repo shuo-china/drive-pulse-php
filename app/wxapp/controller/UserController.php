@@ -35,7 +35,7 @@ class UserController extends BaseController
         $avatar = FileModel::where('key', $post['avatarKey'])->find();
 
         $lastUid = User::orderRaw('CAST(uid AS UNSIGNED) DESC')->value('uid');
-        $nextUid = (string) max(100, (int) $lastUid + 1);
+        $nextUid = $this->generateNextUidWithoutFour($lastUid);
 
         $user = User::create([
             'uid' => $nextUid,
@@ -128,7 +128,7 @@ class UserController extends BaseController
                 $userChannelMap[$row['user_id']][$row['channel_id']] = (int) $row['audit_status'];
             }
         }
-        
+
         $channelList = Channel::where('status', 1)->select()->toArray();
         $todayStartTimestamp = strtotime(date('Y-m-d'));
         $users->each(function ($item) use ($releaseCountMap, $takeCountMap, $userChannelMap, $todayStartTimestamp, $channelList) {
@@ -147,5 +147,16 @@ class UserController extends BaseController
         });
 
         $this->success(200, $users);
+    }
+
+    protected function generateNextUidWithoutFour($lastUid)
+    {
+        $nextUid = max(100, (int) $lastUid + 1);
+
+        while (strpos((string) $nextUid, '4') !== false) {
+            $nextUid++;
+        }
+
+        return (string) $nextUid;
     }
 }
