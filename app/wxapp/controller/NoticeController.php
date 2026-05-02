@@ -6,6 +6,8 @@ use app\wxapp\model\Notice;
 
 class NoticeController extends BaseController
 {
+    protected $middleware = ['wxapp_api_auth:guest'];
+
     public function index()
     {
         $notice = Notice::where('id', '<>', 0)->find();
