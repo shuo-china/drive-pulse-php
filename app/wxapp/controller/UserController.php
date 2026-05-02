@@ -80,7 +80,9 @@ class UserController extends BaseController
 
     public function statistics()
     {
-        $map = [];
+        $map = [
+            'balance_limit' => 1,
+        ];
         $param = $this->request->param();
         if (!empty($param['nickname'])) {
             $map[] = ['nickname', 'like', '%' . $param['nickname'] . '%'];
