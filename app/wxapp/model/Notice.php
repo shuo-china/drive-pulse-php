@@ -8,4 +8,9 @@ class Notice extends BaseModel
     {
         return $value ? date('Y-m-d H:i', $value) : '';
     }
+
+    public function getUpdateTimeAttr($value)
+    {
+        return $value ? date('Y-m-d H:i', $value) : '';
+    }
 }
