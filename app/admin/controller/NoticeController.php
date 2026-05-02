@@ -20,7 +20,9 @@ class NoticeController extends BaseController
         if (!$notice) {
             Notice::create($post);
         } else {
-            $notice->save($post);
+            $notice->title = $post['title'];
+            $notice->content = $post['content'];
+            $notice->save();
         }
 
         $this->success(201);
