@@ -41,6 +41,7 @@ class UserController extends BaseController
 
         $user = User::create([
             'uid' => $nextUid,
+            'balance_limit' => 1,
             'nickname' => $post['nickname'],
             'avatar_key' => $post['avatarKey'],
             'avatar_path' => $avatar->getData('path'),
