@@ -57,7 +57,7 @@ class OrderController extends BaseController
             $userReleaseCount = Order::where('channel_id', $post['channel_id'])->where('user_id', $this->request->userId)->sum('count');
             $userTakeCount = Order::where('channel_id', $post['channel_id'])->where('target_user_id', $this->request->userId)->sum('count');
             $userBalanceCount = $userReleaseCount - $userTakeCount;
-            if ($userBalanceCount + $post['count'] > config('drive_pulse.balance_count_max')) {
+            if ($userBalanceCount + $post['count'] > config('sys.drive_pulse.balance_count_max')) {
                 $errorMessage = "您的当前结余为{$userBalanceCount}，本次报单后您的结余为" . ($userBalanceCount + $post['count']) . "，高于限制" . config('drive_pulse.balance_count_max');
                 $this->error(400, $errorMessage, 'BALANCE_LIMIT');
             }
@@ -68,8 +68,7 @@ class OrderController extends BaseController
             $targetUserReleaseCount = Order::where('channel_id', $post['channel_id'])->where('user_id', $targetUser['id'])->sum('count');
             $targetUserTakeCount = Order::where('channel_id', $post['channel_id'])->where('target_user_id', $targetUser['id'])->sum('count');
             $targetUserBalanceCount = $targetUserReleaseCount - $targetUserTakeCount;
-            $this->error(400, config('drive_pulse.balance_count_min'), 'BALANCE_LIMIT');
-            if ($targetUserBalanceCount - $post['count'] < config('drive_pulse.balance_count_min')) {
+            if ($targetUserBalanceCount - $post['count'] < config('sys.drive_pulse.balance_count_min')) {
                 $errorMessage = "对方当前结余为{$targetUserBalanceCount}，本次报单后对方结余为" . ($targetUserBalanceCount - $post['count']) . "，低于限制" . config('drive_pulse.balance_count_min');
                 $this->error(400, $errorMessage, 'BALANCE_LIMIT');
             }
