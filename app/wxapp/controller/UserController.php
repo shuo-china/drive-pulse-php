@@ -36,7 +36,7 @@ class UserController extends BaseController
 
         $avatar = FileModel::where('key', $post['avatarKey'])->find();
 
-        $lastUid = User::orderRaw('CAST(uid AS UNSIGNED) DESC')->value('uid');
+        $lastUid = User::where('balance_limit', 1)->orderRaw('CAST(uid AS UNSIGNED) DESC')->value('uid');
         $nextUid = $this->generateNextUidWithoutFour($lastUid);
 
         $user = User::create([
