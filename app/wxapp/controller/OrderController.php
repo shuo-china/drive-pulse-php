@@ -54,7 +54,7 @@ class OrderController extends BaseController
         $post = $this->request->post();
         $user = User::where('id', $this->request->userId)->find();
 
-        $this->error(400, config('sys.drive_pulse.balance_count_max'));
+        $this->error(400, config('sys'));
 
         if ($user->balance_limit) {
             $userReleaseCount = Order::where('channel_id', $post['channel_id'])->where('user_id', $this->request->userId)->sum('count');
