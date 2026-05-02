@@ -8,8 +8,7 @@ class NoticeController extends BaseController
 {
     public function index()
     {
-        $notices = Notice::order('id', 'desc')->select()->toArray();
-
-        $this->success(200, empty($notices) ? null : $notices[0]);
+        $notice = Notice::where('id', '<>', 0)->find();
+        $this->success(200, $notice);
     }
 }
