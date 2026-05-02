@@ -8,21 +8,19 @@ class NoticeController extends BaseController
 {
     public function detail()
     {
-        $notice = Notice::order('id', 'desc')->find();
-        $this->success(200, $notice);
+        $notices = Notice::order('id', 'desc')->select()->toArray();
+        $this->success(200, empty($notices) ? null : $notices[0]);
     }
 
     public function update()
     {
         $post = $this->request->post();
-        $notice = Notice::order('id', 'desc')->find();
-        $this->success(200, $notice);
-        if (!$notice) {
+        $notices = Notice::order('id', 'desc')->select()->toArray();
+
+        if (empty($notices)) {
             Notice::create($post);
         } else {
-            $notice->title = $post['title'];
-            $notice->content = $post['content'];
-            $notice->save();
+            Notice::where('id', $notices[0]['id'])->update($post);
         }
 
         $this->success(201);
