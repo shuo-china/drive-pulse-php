@@ -22,7 +22,7 @@ class OrderController extends BaseController
         }
 
         $order = new Order();
-        $orders = $order->where($map)->with(['user', 'target_user'])->paginate();
+        $orders = $order->where($map)->with(['user', 'target_user'])->order('id DESC')->paginate();
         $this->success(200, $orders);
     }
 }
