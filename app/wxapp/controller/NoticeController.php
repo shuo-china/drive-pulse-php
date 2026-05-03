@@ -8,7 +8,7 @@ class NoticeController extends BaseController
 {
     public function index()
     {
-        if (!empty($this->request->userId)) {
+        if (empty($this->request->userId)) {
             $this->error(400, '没有权限', 'NO_AUTH');
         }
 
