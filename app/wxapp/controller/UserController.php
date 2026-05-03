@@ -83,8 +83,11 @@ class UserController extends BaseController
 
     public function statistics()
     {
+        $userIds = UserChannel::where('audit_status', 2)->column('user_id');
+
         $map = [
-            'balance_limit' => 1,
+            ['balance_limit', '=', 1],
+            ['id', 'in', $userIds],
         ];
         $param = $this->request->param();
         if (!empty($param['nickname'])) {
