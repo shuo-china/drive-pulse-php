@@ -68,9 +68,9 @@ class UserController extends BaseController
 
     public function getBananceCountByChannelId($channel_id)
     {
-        $releaseCount = Order::where('channel_id', $channel_id)->where('user_id', $this->request->userId)->sum('count');
-        $takeCount = Order::where('channel_id', $channel_id)->where('target_user_id', $this->request->userId)->sum('count');
-        $balanceCount = $releaseCount - $takeCount;
+        $uid = (int) $this->request->userId;
+        $balanceCount = Order::where('channel_id', $channel_id)
+            ->value("COALESCE(SUM(CASE WHEN user_id = {$uid} THEN `count` ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN target_user_id = {$uid} THEN `count` ELSE 0 END), 0)");
         $this->success(200, $balanceCount);
     }
 
