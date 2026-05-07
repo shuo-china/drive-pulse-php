@@ -86,7 +86,9 @@ class UserController extends BaseController
     public function update()
     {
         $post = $this->request->post();
-        
+
+        $this->validate($post, 'User');
+
         if ($post['avatar_key']) {
             $avatar = FileModel::where('key', $post['avatar_key'])->find();
             $post['avatar_path'] = $avatar->getData('path');
