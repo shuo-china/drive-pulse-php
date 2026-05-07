@@ -53,13 +53,13 @@ class OrderController extends BaseController
     public function create()
     {
         $post = $this->request->post();
-        $balanceLimitCount = Channel::where('id', $post['channel_id'])->value('balance_limit_count');
 
         $targetUser = User::where('uid', $post['uid'])->find();
         if ($targetUser->balance_limit) {
             $targetUserReleaseCount = Order::where('channel_id', $post['channel_id'])->where('user_id', $targetUser['id'])->sum('count');
             $targetUserTakeCount = Order::where('channel_id', $post['channel_id'])->where('target_user_id', $targetUser['id'])->sum('count');
             $targetUserBalanceCount = $targetUserReleaseCount - $targetUserTakeCount;
+            $balanceLimitCount = Channel::where('id', $post['channel_id'])->value('balance_limit_count');
             if ($targetUserBalanceCount - $post['count'] < $balanceLimitCount) {
                 $errorMessage = "报单后对方结余为【" . ($targetUserBalanceCount - $post['count']) . "】，低于限制【" . $balanceLimitCount . "】，无法报单";
                 $this->error(400, $errorMessage, 'BALANCE_LIMIT');
