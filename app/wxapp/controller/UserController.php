@@ -46,7 +46,7 @@ class UserController extends BaseController
             'avatar_path' => $avatar->getData('path'),
             'is_hidden' => 0,
             'min_balance' => -5,
-            'initial_balance' => 0,
+            'initial_balance' => config('sys.drive_pulse.initial_balsance') ?? 0,
         ]);
 
         UserWechatMini::where('id', $this->request->userWxappId)->update([
