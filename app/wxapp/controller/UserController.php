@@ -36,15 +36,17 @@ class UserController extends BaseController
 
         $avatar = FileModel::where('key', $post['avatarKey'])->find();
 
-        $lastUid = User::where('balance_limit', 1)->orderRaw('CAST(uid AS UNSIGNED) DESC')->value('uid');
+        $lastUid = User::where('is_hidden', 0)->orderRaw('CAST(uid AS UNSIGNED) DESC')->value('uid');
         $nextUid = $this->generateNextUidWithoutFour($lastUid);
 
         $user = User::create([
             'uid' => $nextUid,
-            'balance_limit' => 1,
             'nickname' => $post['nickname'],
             'avatar_key' => $post['avatarKey'],
             'avatar_path' => $avatar->getData('path'),
+            'is_hidden' => 0,
+            'min_balance' => -5,
+            'initial_balance' => 0,
         ]);
 
         UserWechatMini::where('id', $this->request->userWxappId)->update([
@@ -68,13 +70,13 @@ class UserController extends BaseController
 
     public function getBananceCountByChannelId($channel_id)
     {
-        // $releaseCount = Order::where('channel_id', $channel_id)->where('user_id', $this->request->userId)->sum('count');
-        // $takeCount = Order::where('channel_id', $channel_id)->where('target_user_id', $this->request->userId)->sum('count');
-        // $balanceCount = $releaseCount - $takeCount;
-
-        $uid = (int) $this->request->userId;
-        $balanceCount = Order::where('channel_id', $channel_id)
-            ->value("COALESCE(SUM(CASE WHEN user_id = {$uid} THEN `count` ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN target_user_id = {$uid} THEN `count` ELSE 0 END), 0)");
+        $userId = $this->request->userId;
+        $diffCount = Order::where('channel_id', $channel_id)
+            ->value("COALESCE(SUM(CASE WHEN user_id = {$userId} THEN `count` ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN target_user_id = {$userId} THEN `count` ELSE 0 END), 0)");
+        $initialBalance = User::where('id', $userId)->value('initial_balance');
+        
+        $balanceCount = $initialBalance + $diffCount;
+        
         $this->success(200, $balanceCount);
     }
 
@@ -90,7 +92,7 @@ class UserController extends BaseController
         $userIds = UserChannel::where('audit_status', 2)->column('user_id');
 
         $map = [
-            ['balance_limit', '=', 1],
+            ['is_hidden', '=', 0],
             ['id', 'in', $userIds],
         ];
         $param = $this->request->param();
@@ -154,7 +156,7 @@ class UserController extends BaseController
                     'id' => $channel['id'],
                     'title' => $channel['title'],
                     'audit_status' => $userChannelMap[$item->id][$channel['id']] ?? 0,
-                    'count' => ($releaseCountMap[$item->id][$channel['id']] ?? 0) - ($takeCountMap[$item->id][$channel['id']] ?? 0),
+                    'count' => $item->initial_balance + ($releaseCountMap[$item->id][$channel['id']] ?? 0) - ($takeCountMap[$item->id][$channel['id']] ?? 0),
                 ];
             }
             $item->channels = $channels;

@@ -21,7 +21,7 @@ class UserController extends BaseController
             $map[] = ['uid', '=', $param['uid']];
         }
 
-        $users = User::where($map)->paginate();
+        $users = User::where($map)->order('id', 'desc')->paginate();
         $pageUserIds = array_column($users->items(), 'id');
         $releaseCountMap = [];
         $takeCountMap = [];
@@ -66,7 +66,7 @@ class UserController extends BaseController
                     'id' => $channel['id'],
                     'title' => $channel['title'],
                     'audit_status' => $userChannelMap[$item->id][$channel['id']] ?? 0,
-                    'balance_count' => ($releaseCountMap[$item->id][$channel['id']] ?? 0) - ($takeCountMap[$item->id][$channel['id']] ?? 0),
+                    'balance_count' => $item->initial_balance + ($releaseCountMap[$item->id][$channel['id']] ?? 0) - ($takeCountMap[$item->id][$channel['id']] ?? 0),
                 ];
             }
             $item->channels = $channelList;

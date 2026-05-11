@@ -26,11 +26,11 @@ return [
             // 服务器地址
             'hostname' => env('database.hostname', '127.0.0.1'),
             // 数据库名
-            'database' => env('database.database', 'kr_drive_pulse'),
+            'database' => env('database.database', 'drive-pulse'),
             // 用户名
             'username' => env('database.username', 'root'),
             // 密码
-            'password' => env('database.password', 'EZ9G1TgALfjTbhXa'),
+            'password' => env('database.password', '123456'),
             // 端口
             'hostport' => env('database.hostport', '3306'),
             // 数据库连接参数
