@@ -15,6 +15,11 @@ class UserController extends BaseController
     {
         $param = $this->request->param();
         $map = [];
+
+        if (!$this->request->clientInfo['is_top']) {
+            $map[] = ['is_hidden', '=', 0];
+        }
+
         if (!empty($param['nickname'])) {
             $map[] = ['nickname', 'like', '%' . $param['nickname'] . '%'];
         }
