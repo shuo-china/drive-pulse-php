@@ -3,3 +3,4 @@
 /vendor
 *.log
 database.php
+/config/database.php

@@ -74,9 +74,9 @@ class UserController extends BaseController
         $diffCount = Order::where('channel_id', $channel_id)
             ->value("COALESCE(SUM(CASE WHEN user_id = {$userId} THEN `count` ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN target_user_id = {$userId} THEN `count` ELSE 0 END), 0)");
         $initialBalance = User::where('id', $userId)->value('initial_balance');
-        
+
         $balanceCount = $initialBalance + $diffCount;
-        
+
         $this->success(200, $balanceCount);
     }
 
