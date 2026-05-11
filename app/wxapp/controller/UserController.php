@@ -167,11 +167,11 @@ class UserController extends BaseController
 
     protected function generateNextUidWithoutFour($lastUid)
     {
-        $nextUid = max(101, (int) $lastUid + 1);
+        $nextUid = max(10, (int) $lastUid + 1);
 
-        while (strpos((string) $nextUid, '4') !== false) {
-            $nextUid++;
-        }
+        // while (strpos((string) $nextUid, '4') !== false) {
+        //     $nextUid++;
+        // }
 
         return (string) $nextUid;
     }
