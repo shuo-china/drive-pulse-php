@@ -7,6 +7,7 @@ use app\admin\model\Channel;
 use app\admin\model\UserChannel;
 use app\admin\model\Order;
 use app\admin\model\File as FileModel;
+use think\facade\Db;
 
 class UserController extends BaseController
 {
@@ -19,6 +20,72 @@ class UserController extends BaseController
         }
         if (!empty($param['uid'])) {
             $map[] = ['uid', '=', $param['uid']];
+        }
+        if (isset($param['min_balance_count']) && $param['min_balance_count'] !== '') {
+            $minBalanceCount = (int) $param['min_balance_count'];
+            $orderTable = (new Order())->getTable();
+            $userTable = (new User())->getTable();
+
+            $rows = Db::query(
+                "SELECT u.id
+                FROM {$userTable} u
+                LEFT JOIN (
+                    SELECT t.user_id, t.channel_id, SUM(t.delta) AS channel_delta
+                    FROM (
+                        SELECT user_id, channel_id, `count` AS delta
+                        FROM {$orderTable}
+                        WHERE delete_time IS NULL
+                        UNION ALL
+                        SELECT target_user_id AS user_id, channel_id, -`count` AS delta
+                        FROM {$orderTable}
+                        WHERE delete_time IS NULL
+                    ) t
+                    GROUP BY t.user_id, t.channel_id
+                ) d ON d.user_id = u.id
+                GROUP BY u.id, u.initial_balance
+                HAVING MAX(u.initial_balance + IFNULL(d.channel_delta, 0)) >= :min_balance_count",
+                ['min_balance_count' => $minBalanceCount]
+            );
+
+            $allowUserIds = array_column($rows, 'id');
+            if (empty($allowUserIds)) {
+                $map[] = ['id', '=', 0];
+            } else {
+                $map[] = ['id', 'in', $allowUserIds];
+            }
+        }
+        if (isset($param['max_balance_count']) && $param['max_balance_count'] !== '') {
+            $maxBalanceCount = (int) $param['max_balance_count'];
+            $orderTable = (new Order())->getTable();
+            $userTable = (new User())->getTable();
+
+            $rows = Db::query(
+                "SELECT u.id
+                FROM {$userTable} u
+                LEFT JOIN (
+                    SELECT t.user_id, t.channel_id, SUM(t.delta) AS channel_delta
+                    FROM (
+                        SELECT user_id, channel_id, `count` AS delta
+                        FROM {$orderTable}
+                        WHERE delete_time IS NULL
+                        UNION ALL
+                        SELECT target_user_id AS user_id, channel_id, -`count` AS delta
+                        FROM {$orderTable}
+                        WHERE delete_time IS NULL
+                    ) t
+                    GROUP BY t.user_id, t.channel_id
+                ) d ON d.user_id = u.id
+                GROUP BY u.id, u.initial_balance
+                HAVING MAX(u.initial_balance + IFNULL(d.channel_delta, 0)) <= :max_balance_count",
+                ['max_balance_count' => $maxBalanceCount]
+            );
+
+            $allowUserIds = array_column($rows, 'id');
+            if (empty($allowUserIds)) {
+                $map[] = ['id', '=', 0];
+            } else {
+                $map[] = ['id', 'in', $allowUserIds];
+            }
         }
 
         $users = User::where($map)->order('id', 'desc')->paginate();
