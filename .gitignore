@@ -2,4 +2,4 @@
 /.vscode
 /vendor
 *.log
-config/database.php
+database.php
