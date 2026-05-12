@@ -57,7 +57,7 @@ class ChannelController extends BaseController
     }
     public function applyPagination()
     {
-        $userChannels = UserChannel::with(['user', 'channel'])->where('audit_status', '=', 1)->paginate();
+        $userChannels = UserChannel::with(['user', 'channel'])->where('audit_status', '=', 1)->order('id', 'desc')->paginate();
         $this->success(200, $userChannels);
     }
 
