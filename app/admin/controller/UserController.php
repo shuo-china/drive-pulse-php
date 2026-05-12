@@ -34,7 +34,7 @@ class UserController extends BaseController
             $rows = Db::query(
                 "SELECT u.id
                 FROM {$userTable} u
-                LEFT JOIN (
+                INNER JOIN (
                     SELECT t.user_id, t.channel_id, SUM(t.delta) AS channel_delta
                     FROM (
                         SELECT user_id, channel_id, `count` AS delta
@@ -67,7 +67,7 @@ class UserController extends BaseController
             $rows = Db::query(
                 "SELECT u.id
                 FROM {$userTable} u
-                LEFT JOIN (
+                INNER JOIN (
                     SELECT t.user_id, t.channel_id, SUM(t.delta) AS channel_delta
                     FROM (
                         SELECT user_id, channel_id, `count` AS delta
