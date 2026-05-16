@@ -68,6 +68,25 @@ class UserController extends BaseController
         $this->success(200, $users);
     }
 
+    public function getOptions()
+    {
+        $channelIds = Channel::where('status', 1)->column('id');
+
+        $options = [];
+
+        foreach ($channelIds as $channelId) {
+            $userIds = UserChannel::where('channel_id', $channelId)
+                ->where('audit_status', 2)
+                ->where('user_id', '<>', $this->request->userId)
+                ->column('user_id');
+                
+            $users = User::field('id,uid,nickname,avatar_path')->where('id', 'in', $userIds)->select();
+            $options[$channelId] = $users;
+        }
+
+        $this->success(200, $options);
+    }
+
     public function getBananceCountByChannelId($channel_id)
     {
         $userId = $this->request->userId;

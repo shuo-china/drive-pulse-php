@@ -4,6 +4,8 @@ namespace app\wxapp\controller;
 
 use app\wxapp\model\Channel;
 use app\wxapp\model\UserChannel;
+use app\wxapp\model\Order;
+use app\wxapp\model\User;
 
 class ChannelController extends BaseController
 {
@@ -52,5 +54,36 @@ class ChannelController extends BaseController
             ]);
         }
         return $this->success(201);
+    }
+
+    public function getChannels()
+    {
+        $userId = $this->request->userId;
+        $initialBalance = User::where('id', $userId)->value('initial_balance');
+        $channels = Channel::where('status', 1)->field('id,title')->select()->toArray();
+        $diffCountRows = Order::where(function ($query) use ($userId) {
+            $query->where('user_id', $userId)->whereOr('target_user_id', $userId);
+        })
+            ->field("channel_id, COALESCE(SUM(CASE WHEN user_id = {$userId} THEN `count` ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN target_user_id = {$userId} THEN `count` ELSE 0 END), 0) AS diff_count")
+            ->group('channel_id')
+            ->select()
+            ->toArray();
+
+        $diffCountMap = [];
+        foreach ($diffCountRows as $row) {
+            $diffCountMap[$row['channel_id']] = (int) $row['diff_count'];
+        }
+
+        $userChannelStatusMap = UserChannel::where('user_id', $userId)
+            ->column('audit_status', 'channel_id');
+
+        foreach ($channels as &$channel) {
+            $channel['balance_count'] = ($userChannelStatusMap[$channel['id']] ?? null) == 2
+                ? $initialBalance + ($diffCountMap[$channel['id']] ?? 0)
+                : null;
+        }
+        unset($channel);
+
+        $this->success(200, $channels);
     }
 }
