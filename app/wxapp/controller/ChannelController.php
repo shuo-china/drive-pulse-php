@@ -78,6 +78,7 @@ class ChannelController extends BaseController
             ->column('audit_status', 'channel_id');
 
         foreach ($channels as &$channel) {
+            $channel['audit_status'] = $userChannelStatusMap[$channel['id']] ?? 0;
             $channel['balance_count'] = ($userChannelStatusMap[$channel['id']] ?? null) == 2
                 ? $initialBalance + ($diffCountMap[$channel['id']] ?? 0)
                 : null;
